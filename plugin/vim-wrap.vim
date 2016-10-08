@@ -1,8 +1,43 @@
+" MODELINE {{{
+" vim: set foldmethod=marker foldlevel=0 sw=2 ts=2 sts=2 et tw=0:
+" }}}
+" THE POWER OF A DOT {{{
+"
+"   _____ _                                                  __
+"  |_   _| |__   ___   _ __   _____      _____ _ __    ___  / _|   __ _
+"    | | | '_ \ / _ \ | '_ \ / _ \ \ /\ / / _ \ '__|  / _ \| |_   / _` |
+"    | | | | | |  __/ | |_) | (_) \ V  V /  __/ |    | (_) |  _| | (_| |  _
+"    |_| |_| |_|\___| | .__/ \___/ \_/\_/ \___|_|     \___/|_|    \__,_| (_)
+"                     |_|
+"
+" This is a VIM-WRAP PLUGIN!
+"
+" Copyright (c) 2016 Dorian Ivancic
+"
+" Permission is hereby granted, free of charge, to any person obtaining a copy
+" of this software and associated documentation files (the "Software"), to
+" deal in the Software without restriction, including without limitation the
+" rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+" sell copies of the Software, and to permit persons to whom the Software is
+" furnished to do so, subject to the following conditions:
+"
+" The above copyright notice and this permission notice shall be included in
+" all copies or substantial portions of the Software.
+"
+" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+" IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+" FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+" AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+" LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+" FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+" IN THE SOFTWARE.
+"
+" }}}
+" HELPERS {{{
 if exists("g:loaded_vim_wrap") || v:version < 700
   finish
 endif
 let g:loaded_vim_wrap = 1
-
 
 let g:vim_wrap_fire_on_wrap_option_change = 1
 function! s:FireOnWrapOptionChange()
@@ -14,6 +49,18 @@ function! s:UseVimWrapWrapToggleMapping()
   return get(g:, 'vim_wrap_use_default_wrap_toggle_key_mapping', 0)
 endfunction
 
+let g:vim_wrap_define_commands = 0
+function! s:DefineVimWrapCommands()
+  return get(g:, 'vim_wrap_define_commands', 0)
+endfunction
+
+let g:vim_wrap_verbose = 1
+function! s:Verbose()
+  return get(g:, 'vim_wrap_verbose', 0)
+endfunction
+" }}}
+" MAPING RELATED {{{
+" maps definition {{{
 let s:normal_maps = {
   \ 'j':      'j',
   \ 'k':      'k',
@@ -32,9 +79,8 @@ let s:insert_maps = {
   \ '<Up>':   'ka',
   \ '<End>':  '$a',
   \ '<Home>': '^a'}
-
-
-
+" }}}
+" maps functions {{{
 function! s:Remap(mode, wrap)
   let l:map_command = 'noremap' . ' '
   let l:map_prefix = '' . ' '
@@ -68,45 +114,93 @@ function! s:Remap(mode, wrap)
   endfor
 endfunction
 
-function! s:RemapAllModes(wrap)
+function! s:RemapModes(wrap)
   for l:mode in ['normal', 'visual', 'insert']
     call s:Remap(l:mode, a:wrap)
   endfor
 endfunction
-
+" }}}
+" }}}
+" SCRIPT PRIVATE WRAP & NOWRAP FUNCTIONS {{{
+" Wrap() {{{
 function! s:Wrap()
-  if !s:FireOnWrapOptionChange()
+  " in case we have a hook to option change
+  if s:FireOnWrapOptionChange()
+    " if the option is set, we were called
+    " through the change option hook
+    if &wrap
+      " so we setup mappings and continue
+      call s:RemapModes('wrap')
+
+    " the wrap option is not set, but the
+    " hook to option change is in place
+    else
+      " so we set the wrap option
+      " and return
+      set wrap
+      return
+    endif
+
+  " in case there is no option change
+  " hook in place
+  else
+    " we do everything manually
     set wrap
+    call s:RemapModes('wrap')
   endif
 
-  call s:RemapAllModes('wrap')
-endfunction
+  " common setup goes beyond this line
 
+  if s:Verbose()
+    echo "WRAP [ON]"
+  endif
+endfunction
+" }}}
+" NoWrap {{{
 function! s:NoWrap()
-  if !s:FireOnWrapOptionChange()
+  " in case we have a hook to option change
+  if s:FireOnWrapOptionChange()
+    " if the option is set, we were called
+    " through the change option hook
+    if !&wrap
+      " so we restore mappings and continue
+      call s:RemapModes('nowrap')
+
+    " the wrap option is not set, but the
+    " hook to option change is in place
+    else
+      " so we restore the wrap option
+      " and return
+      set nowrap
+      return
+    endif
+
+  " in case there is no option change
+  " hook in place
+  else
+    " we do everything manually
     set nowrap
+    call s:RemapModes('nowrap')
   endif
 
-  call s:RemapAllModes('nowrap')
+  " common setup goes beyond this line
+
+  if s:Verbose()
+    echo "WRAP [OFF]"
+  endif
 endfunction
-
-
-
-" EXTERNAL HOOKS
-
+" }}}
+" }}}
+" EXTERNAL HOOKS {{{
 " option change (i.e. set wrap / set nowrap) {{{
 if s:FireOnWrapOptionChange()
   function! <SID>OnWrapOptionChange()
     if expand("<amatch>") ==# 'wrap'
-      let s:out = "WRAP"
       if v:option_new == 0
         call s:NoWrap()
-        let s:out = s:out . " [OFF]"
       else
         call s:Wrap()
-        let s:out = s:out . " [ON]"
       endif
-      echo s:out
     endif
   endfunction
 
@@ -116,7 +210,6 @@ if s:FireOnWrapOptionChange()
   augroup END
 endif
 " }}}
-
 " keyboard shortcut hook (e.g. <leader>w toggles wrap) {{{
 if s:UseVimWrapWrapToggleMapping()
   function! <SID>ToggleWrap()
@@ -130,15 +223,14 @@ if s:UseVimWrapWrapToggleMapping()
   nnoremap <silent> <leader>w   :call <SID>ToggleWrap()<CR>
 endif
 " }}}
-
 " commands (i.e. :Wrap, :NoWrap, :ToggleWrap) {{{
-command! Wrap                   call s:Wrap()
-command! NoWrap                 call s:NoWrap()
-command! ToggleWrap             call <SID>ToggleWrap()
+if s:DefineVimWrapCommands()
+  command! Wrap                 call s:Wrap()
+  command! NoWrap               call s:NoWrap()
+  command! ToggleWrap           call <SID>ToggleWrap()
+endif
 " }}}
-
-
-finish
+" }}}
 
 
 
