@@ -39,22 +39,22 @@ if exists("g:loaded_vim_wrap") || v:version < 700
 endif
 let g:loaded_vim_wrap = 1
 
-let g:vim_wrap_fire_on_wrap_option_change = 1
+"let g:vim_wrap_fire_on_wrap_option_change = 1
 function! s:FireOnWrapOptionChange()
   return get(g:, 'vim_wrap_fire_on_wrap_option_change', 0)
 endfunction
 
-let g:vim_wrap_use_default_wrap_toggle_key_mapping = 1
+"let g:vim_wrap_use_default_wrap_toggle_key_mapping = 1
 function! s:UseVimWrapWrapToggleMapping()
   return get(g:, 'vim_wrap_use_default_wrap_toggle_key_mapping', 0)
 endfunction
 
-let g:vim_wrap_define_commands = 0
+"let g:vim_wrap_define_commands = 1
 function! s:DefineVimWrapCommands()
   return get(g:, 'vim_wrap_define_commands', 0)
 endfunction
 
-let g:vim_wrap_verbose = 1
+"let g:vim_wrap_verbose = 1
 function! s:Verbose()
   return get(g:, 'vim_wrap_verbose', 0)
 endfunction
@@ -77,8 +77,8 @@ let s:visual_maps = s:normal_maps
 let s:insert_maps = {
   \ '<Down>': 'ja',
   \ '<Up>':   'ka',
-  \ '<End>':  '$a',
-  \ '<Home>': '^a'}
+  \ '<End>':  '$i',
+  \ '<Home>': '^i'}
 " }}}
 " maps functions {{{
 function! s:Remap(mode, wrap)
@@ -110,7 +110,7 @@ function! s:Remap(mode, wrap)
   endif
 
   for key in keys(l:maps)
-    echo l:map_command . key . l:map_prefix . l:maps[key] . l:map_sufix
+    execute l:map_command . key . l:map_prefix . l:maps[key] . l:map_sufix
   endfor
 endfunction
 
@@ -122,6 +122,9 @@ endfunction
 " }}}
 " }}}
 " SCRIPT PRIVATE WRAP & NOWRAP FUNCTIONS {{{
+let s:saved_showbreak=""
+let s:saved_whichwrap=""
+
 " Wrap() {{{
 function! s:Wrap()
   " in case we have a hook to option change
@@ -150,6 +153,17 @@ function! s:Wrap()
   endif
 
   " common setup goes beyond this line
+
+  " save the value of whichwrap and add <Left>
+  " and <Right> to it on order to allow moving
+  " to the previous/next line when at start/end
+  " of line
+  let s:saved_whichwrap=&whichwrap
+  set whichwrap+=<,>
+
+  " save the value of showbreak and turn it off
+  let s:saved_showbreak=&showbreak
+  set showbreak=
 
   if s:Verbose()
     echo "WRAP [ON]"
@@ -183,7 +197,9 @@ function! s:NoWrap()
     call s:RemapModes('nowrap')
   endif
 
-  " common setup goes beyond this line
+  " restore the saved values
+  let &whichwrap=s:saved_whichwrap
+  let &showbreak=s:saved_showbreak
 
   if s:Verbose()
     echo "WRAP [OFF]"
@@ -231,26 +247,13 @@ if s:DefineVimWrapCommands()
 endif
 " }}}
 " }}}
-
-
-
-
-
-
-function! FuncIns2()
-  normal g$
-  if (col(".") == col("$") - 1)
-    "normal! gg
-    "echo "a"
-    "return "a"
-    execute 'normal a'
-  else
-    "normal! G
-    "echo "i"
-    "return "i"
-    execute 'normal i'
-  endif
-endfunction
-
-"   Wrap plugin (showbreak off)
-"     sets showbreak breakwidth to the number width when numbers show, 0 otherwise (see n in cpoptions), whichwrap
+" KNOWN ISSUES / BUGS {{{
+" Known issues / bugs:
+"   - when in insert mode, <End> works fine for all lines of wrapped line except for the list line, it positions the cursor just before the last character
+"   - when in insert mode and moving arround with <Up> and <Down> it sometimes drop out of insert mode
+"   - when entering wrap mode (e.g. set wrap) values of whichwrap and showbreak are saved to internal values and then restored when getting out (e.g. set nowrap)
+"     if set nowrap is called first the original values set by the user are going to be lost
+"
+" I do not consider these to be serious bugs as you shouldn't navigate when in insert mode. Come to think of it, you shuldn't navigate with cursor keys at all. :)
+" See: hardmode (https://github.com/wikitopian/hardmode)
+" }}}
