@@ -1,0 +1,76 @@
+*vim-wrap.txt*  Automatically setup all things needed when entering wrap mode
+
+Authors: Dorian Ivancic <dorian.ivancic@gmail.com>
+License: MIT
+
+This plugin checks for Vim version 7+.
+
+INTRODUCTION                                     *vim-wrap*
+
+Vim-wrap is a plugin which automatically sets all the required settings when
+entering or leaving wrap mode (i.e. ':set wrap' and ':set nowrap'). By default
+it sets mappings for j, k, $, ^, 0, <Down>, <Up>, <End>, <Home> in Normal and
+Visual mode to allow navigation through the wrapped lines. When nowrap is set
+mappings are restored to default ones. It changes whichwrap (allows navigation
+to the next line with cursor keys) and showbreak (removes anything in it).
+
+It also remaps the <Down>, <Up>, <End> and <Home> in Insert mode. However,
+there are some known bugs about those. Check the bottom of the plugin source
+for the explanation.
+
+That being said see hardmode plugin (ref. https://github.com/wikitopian/hardmode)
+
+Plugin is non intrusive meaning it will not do anything by default unless you
+explicitly tell it to. See |vim-wrap-options|.
+
+*INSTALLATION*                                      *vim-wrap-installation*
+
+There are several installation options. I recommend with pathogen.vim (ref.
+https://github.com/tpope/vim-pathogen) like this:
+
+  cd ~/.vim/bundle
+  git clone https://github.com/divancic/vim-wrap
+
+Once help tags have been generated, you can view the manual with ':help
+vim-wrap'.
+
+ON-EVENT                                          *vim-wrap-on-event*
+
+By default Vim wrap will not be fired automatically when you manually change
+the state of wrap (with e.g. :set wrap, :set nowrap, :set wrap!). If you need
+it to be fired automatically put 'g:vim_wrap_fire_on_wrap_option_change = 1'
+in your vimrc.
+
+COMMANDS                                          *vim-wrap-commands*
+
+Commands will be made available if you have 'let g:vim_wrap_define_commands = 1'
+in your vimrc.
+
+:Wrap                                             go to wrap mode
+:NoWrap                                           go out of wrap mode
+:ToggleWrap                                       toggle the state of wrap mode
+
+MAPPINGS                                          *vim-wrap-mapping*
+
+If you put 'let g:vim_wrap_use_default_wrap_toggle_key_mapping = 1' in your
+vimrc it will map ToggleWrap to <leader>w. 
+
+*VERBOSE*                                           *vim-wrap-verbose*
+
+If you'd like to be notified when entering/leaving wrap mode put the following
+in your vimrc 'let g:vim_wrap_verbose = 1'.
+
+OPTIONS                                           *vim-wrap-options*
+
+|'g:vim_wrap_fire_on_wrap_option_change'|           fire a plugin on ':set
+                                                  wrap', ':set nowrap' or
+                                                  ':set wrap!'
+|'g:vim_wrap_use_default_wrap_toggle_key_mapping'|  set default keymap for
+                                                  wrap toggle (<leader>w)
+|'g:vim_wrap_define_commands'|                      define :Wrap, :NoWrap
+                                                  and :ToggleWrap ex-mode
+                                                  commands
+|'g:vim_wrap_verbose|                               let the user know when
+                                                  wrap setting changes
+
+vim: set sw=2 ts=2 sts=2 et tw=78 ft=help:
