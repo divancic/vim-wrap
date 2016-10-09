@@ -26,9 +26,9 @@ If you need it to be fired automatically put `g:vim_wrap_fire_on_wrap_option_cha
 
 Commands will be made available if you have `let g:vim_wrap_define_commands = 1` in your vimrc.
 
-`:Wrap`                                             go to wrap mode
-`:NoWrap`                                           go out of wrap mode
-`:ToggleWrap`                                       toggle the state of wrap mode
+* `:Wrap`                                             go to wrap mode
+* `:NoWrap`                                           go out of wrap mode
+* `:ToggleWrap`                                       toggle the state of wrap mode
 
 ###Mappings
 
