@@ -209,21 +209,23 @@ endfunction
 " }}}
 " EXTERNAL HOOKS {{{
 " option change (i.e. set wrap / set nowrap) {{{
-if s:FireOnWrapOptionChange()
-  function! <SID>OnWrapOptionChange()
-    if expand("<amatch>") ==# 'wrap'
-      if v:option_new == 0
-        call s:NoWrap()
-      else
-        call s:Wrap()
+if v:version >= 800
+  if s:FireOnWrapOptionChange()
+    function! <SID>OnWrapOptionChange()
+      if expand("<amatch>") ==# 'wrap'
+        if v:option_new == 0
+          call s:NoWrap()
+        else
+          call s:Wrap()
+        endif
       endif
-    endif
-  endfunction
+    endfunction
 
-  augroup onWrapOptionChange
-    autocmd!
-    autocmd OptionSet *         call <SID>OnWrapOptionChange()
-  augroup END
+    augroup onWrapOptionChange
+      autocmd!
+      autocmd OptionSet *         call <SID>OnWrapOptionChange()
+    augroup END
+  endif
 endif
 " }}}
 " keyboard shortcut hook (e.g. <leader>w toggles wrap) {{{
